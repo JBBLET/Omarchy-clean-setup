@@ -222,7 +222,46 @@ else
   ok "fcitx5 not running — it will start via hypr autostart on next session"
 fi
 
-# ── 8. Tmux session scripts ──────────────────────────────────────────────
+# ── 8. Application desktop entries (TUI apps: LazySQL, LazyDocker) ───────
+#
+# Registers TUI apps (lazysql, lazydocker) in Walker / app launchers by
+# dropping .desktop files into ~/.local/share/applications/. Icons live
+# alongside at ~/.local/share/applications/icons/ (matching the path
+# baked into the .desktop Icon= field). The desktop files are stored in
+# the repo with an __HOME__ placeholder which we rewrite with the real
+# $HOME at install time — this avoids committing a machine-specific path
+# into git. Copies, not symlinks, so xdg-desktop-database / walker pick
+# them up without any follow-symlink caveats.
+
+log "Installing application desktop entries"
+APPS_SRC="$REPO_ROOT/config/applications"
+APPS_DST="$HOME/.local/share/applications"
+ICONS_DST="$APPS_DST/icons"
+if [[ -d "$APPS_SRC" ]]; then
+  run mkdir -p "$APPS_DST" "$ICONS_DST"
+  for icon in "$APPS_SRC"/icons/*; do
+    [[ -f "$icon" ]] || continue
+    run install -m 0644 "$icon" "$ICONS_DST/$(basename "$icon")"
+  done
+  for desktop in "$APPS_SRC"/*.desktop; do
+    [[ -f "$desktop" ]] || continue
+    dest="$APPS_DST/$(basename "$desktop")"
+    if (( DRY_RUN )); then
+      dry "sed 's|__HOME__|$HOME|g' $desktop > $dest"
+    else
+      sed "s|__HOME__|$HOME|g" "$desktop" > "$dest"
+      chmod 0644 "$dest"
+    fi
+  done
+  if command -v update-desktop-database >/dev/null 2>&1; then
+    run update-desktop-database "$APPS_DST"
+  fi
+  ok "desktop entries installed to $APPS_DST"
+else
+  warn "no $APPS_SRC — skipping desktop entries"
+fi
+
+# ── 9. Tmux session scripts ──────────────────────────────────────────────
 #
 # The scripts under bin/tmux-sessions/ are project-session launchers (one per
 # project). They get installed (copied, not symlinked, since we want them on
@@ -239,7 +278,7 @@ for f in "$REPO_ROOT"/bin/tmux-sessions/*.sh; do
 done
 ok "tmux session scripts installed to ~/.local/bin/"
 
-# ── 9. Shell wiring: source mkvenv from ~/.bashrc ─────────────────────────
+# ── 10. Shell wiring: source mkvenv from ~/.bashrc ───────────────────────
 
 log "Wiring mkvenv into ~/.bashrc"
 BASHRC="$HOME/.bashrc"
@@ -257,12 +296,12 @@ else
   ok "mkvenv already sourced"
 fi
 
-# ── 10. Omarchy themes ────────────────────────────────────────────────────
+# ── 11. Omarchy themes ────────────────────────────────────────────────────
 
 log "Installing Omarchy themes"
 run "$REPO_ROOT/bin/install-themes.sh"
 
-# ── 11. Omarchy theme hooks (imbypass/omarchy-theme-hook) ─────────────────
+# ── 12. Omarchy theme hooks (imbypass/omarchy-theme-hook) ─────────────────
 #
 # Installs the community theme-set / theme-set.d/ hook framework which
 # repaints alacritty, ghostty, kitty, gtk, waybar, walker, mako, swayosd,
@@ -280,17 +319,17 @@ else
   warn "theme-hook-update not found in PATH — skipping theme hooks"
 fi
 
-# ── 12. Omarchy webapps ───────────────────────────────────────────────────
+# ── 13. Omarchy webapps ───────────────────────────────────────────────────
 
 log "Installing Omarchy webapps"
 run "$REPO_ROOT/bin/install-webapps.sh"
 
-# ── 13. Nightlight automation ─────────────────────────────────────────────
+# ── 14. Nightlight automation ─────────────────────────────────────────────
 
 log "Installing nightlight automation"
 run "$REPO_ROOT/nightlight/install-nightlight.sh"
 
-# ── 14. Default browser: Google Chrome ────────────────────────────────────
+# ── 15. Default browser: Google Chrome ────────────────────────────────────
 
 log "Setting Google Chrome as default browser"
 if (( DRY_RUN )); then
@@ -302,10 +341,29 @@ else
   warn "google-chrome.desktop not found — skipping (did the AUR install fail?)"
 fi
 
-# ── 15. Clone personal projects + vault (LAST step — requires SSH key) ───
+# ── 16. Clone personal projects + vault (needs SSH key) ─────────────────
 
 log "Cloning personal project repos and Obsidian vault"
 run "$REPO_ROOT/bin/clone-projects.sh"
+
+# ── 17. Restart waybar so it picks up the new config/theme ───────────────
+#
+# Waybar auto-reloads on style.css changes (reload_style_on_change: true)
+# but NOT on config.jsonc changes, and it's been running throughout this
+# script with a stale config + theme. Without this kick, workspace numbers
+# and a few other modules render incorrectly until the next login. Using
+# the Omarchy wrapper so we stay on the distro's blessed restart path; if
+# it's missing we fall back to a manual pkill + relaunch.
+
+log "Restarting waybar to pick up new config and theme"
+if command -v omarchy-restart-waybar >/dev/null 2>&1; then
+  run omarchy-restart-waybar
+elif pgrep -x waybar >/dev/null 2>&1; then
+  run bash -c 'pkill -x waybar 2>/dev/null; sleep 0.3; waybar >/dev/null 2>&1 &'
+  ok "waybar restarted (manual fallback)"
+else
+  ok "waybar not running — will start via hypr autostart on next session"
+fi
 
 # ── done ──────────────────────────────────────────────────────────────────
 

@@ -1,13 +1,13 @@
 # Official repo packages (installed via pacman)
 # One per line. Lines starting with # are comments.
 #
-# Anything Omarchy already ships in `omarchy-base.packages` or
-# `omarchy-other.packages` is intentionally NOT listed here — we don't want to
-# fight the distro's own package set. See ~/.local/share/omarchy/install/ for
-# the authoritative list. Notable exclusions:
-#   - tmux, docker, lazygit, lazydocker, neovim, ripgrep, fd, tree-sitter-cli,
-#     libreoffice-fresh, obsidian, spotify, claude-code, fcitx5{,-gtk,-qt},
-#     mise, jdk-openjdk (Java 25)  -> all provided by Omarchy.
+# We use a "belt-and-braces" approach: packages that Omarchy already ships
+# in `omarchy-base.packages` or `omarchy-other.packages` are still listed
+# here if we care about them, because `omarchy-remove-preinstalls` (the
+# Omarchy menu entry "Uninstall preinstalls") strips a bunch of them. With
+# --needed, re-listing is a no-op on a truly fresh install but resurrects
+# them on a stripped one. See ~/.local/share/omarchy/install/ for what the
+# distro ships, and `omarchy-remove-preinstalls` for what it drops.
 #
 # Language runtimes (Python, Java, Node, ...) are NOT installed via pacman.
 # Omarchy uses mise for runtime version management — see install.sh phase 4.
@@ -18,11 +18,16 @@ kotlin
 cmake
 git-lfs
 
-# Belt-and-braces: these ARE in omarchy-base.packages, but listing them here
-# too means install.sh rebuilds them on a stripped Omarchy install. --needed
-# makes this a no-op on a fresh base install.
+# Belt-and-braces: all in omarchy-base but stripped by omarchy-remove-preinstalls.
+# `claude-code`, `spotify`, and the other omarchy-repo packages ship from the
+# [omarchy] pacman repo that Omarchy adds to /etc/pacman.conf. The others are
+# in the regular [extra] repo.
 lazygit
 lazydocker
+claude-code
+spotify
+libreoffice-fresh
+obsidian
 
 # Japanese input — fcitx5 itself is in Omarchy base, but the Mozc engine
 # and the GUI config tool are not.
@@ -31,3 +36,4 @@ fcitx5-configtool
 
 # Apps
 anki
+keepassxc
