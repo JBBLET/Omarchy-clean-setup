@@ -1,0 +1,11 @@
+# Omarchy webapps manifest.
+# Format: Name | URL
+# One entry per line. Lines starting with # are comments.
+# Icons are fetched automatically from Google's favicon service on install.
+
+Claude AI       | https://claude.ai/new
+Discord         | https://discord.com/channels/@me
+GitHub          | https://github.com/
+Netflix         | https://www.netflix.com/browse
+VIA RGB Keyboard| https://usevia.app/
+YouTube         | https://youtube.com/

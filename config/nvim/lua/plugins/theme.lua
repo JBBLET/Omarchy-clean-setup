@@ -1,0 +1,1 @@
+/home/jbblet/.config/omarchy/current/theme/neovim.lua

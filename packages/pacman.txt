@@ -1,0 +1,27 @@
+# Official repo packages (installed via pacman)
+# One per line. Lines starting with # are comments.
+#
+# Anything Omarchy already ships in `omarchy-base.packages` or
+# `omarchy-other.packages` is intentionally NOT listed here — we don't want to
+# fight the distro's own package set. See ~/.local/share/omarchy/install/ for
+# the authoritative list. Notable exclusions:
+#   - tmux, docker, lazygit, lazydocker, neovim, ripgrep, fd, tree-sitter-cli,
+#     libreoffice-fresh, obsidian, spotify, claude-code, fcitx5{,-gtk,-qt},
+#     mise, jdk-openjdk (Java 25)  -> all provided by Omarchy.
+#
+# Language runtimes (Python, Java, Node, ...) are NOT installed via pacman.
+# Omarchy uses mise for runtime version management — see install.sh phase 4.
+
+# Build tools — gradle/cmake/kotlin compilers; mise's java covers the JDK.
+gradle
+kotlin
+cmake
+git-lfs
+
+# Japanese input — fcitx5 itself is in Omarchy base, but the Mozc engine
+# and the GUI config tool are not.
+fcitx5-mozc
+fcitx5-configtool
+
+# Apps
+anki

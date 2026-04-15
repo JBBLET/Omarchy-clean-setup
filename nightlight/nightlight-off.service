@@ -1,0 +1,10 @@
+[Unit]
+Description=Turn off Nightlight (hyprsunset)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pkill -x hyprsunset
+
+[Install]
+WantedBy=default.target

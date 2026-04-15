@@ -1,0 +1,10 @@
+[Unit]
+Description=Turn on Nightlight (hyprsunset)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/hyprsunset -t 4500
+
+[Install]
+WantedBy=default.target

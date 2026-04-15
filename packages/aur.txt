@@ -1,0 +1,8 @@
+# AUR packages (installed via yay)
+# One per line. Lines starting with # are comments.
+#
+# Omarchy already pulls lazydocker, spotify, and claude-code from AUR via its
+# own `omarchy-base.packages` list, so they are not duplicated here.
+
+# Apps
+google-chrome

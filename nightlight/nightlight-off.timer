@@ -1,0 +1,10 @@
+[Unit]
+Description=Turn off Nightlight at 7 AM
+
+[Timer]
+OnCalendar=*-*-* 07:00:00
+Persistent=true
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

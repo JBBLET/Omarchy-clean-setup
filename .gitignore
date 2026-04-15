@@ -1,0 +1,12 @@
+# Claude Code local state
+.claude/
+
+# Editor / OS junk
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Backup files written by install.sh and friends
+*.bak
+*.bak.*
