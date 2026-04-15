@@ -39,7 +39,7 @@ Run on a machine that has nothing yet. Handles the chicken-and-egg of
    phase 1 of `install.sh` installs it and does the pull).
 8. `exec ./install.sh "$@"` — hands off without leaving a second shell.
 
-### `install.sh` — the 14-phase bring-up
+### `install.sh` — the 15-phase bring-up
 
 Safe to re-run on an already-configured machine. Every step is idempotent
 (`--needed` pacman, `ln -sfn`, grep-before-append, `[[ -d .git ]]` skip-checks).
@@ -50,16 +50,17 @@ Safe to re-run on an already-configured machine. Every step is idempotent
 | 2 | `bin/setup-user-dirs.sh` | Relocates XDG user dirs under `~/user/` — must run before any app writes into `$HOME` |
 | 3 | Pacman packages (`packages/pacman.txt`) | Via `omarchy-pkg-add`, falls back to raw pacman |
 | 4 | Dev runtimes via mise | `omarchy-install-dev-env python` + `mise use -g java@temurin-17` |
-| 5 | AUR packages (`packages/aur.txt`) | Via `omarchy-pkg-aur-add`; currently just `google-chrome` |
-| 6 | Dotfile symlinks | Hypr file-by-file, nvim whole-dir, venv presets |
-| 7 | Japanese input method | fcitx5 profile + config symlinks (packages from phase 3, env vars baked into `config/hypr/envs.conf`) |
-| 8 | Shell wiring | Sources `shell/mkvenv.sh` from `~/.bashrc` |
-| 9 | Omarchy themes | `bin/install-themes.sh` clones upstream themes and overlays custom backgrounds |
-| 10 | Theme hooks | `theme-hook-update` — installs [imbypass/omarchy-theme-hook](https://github.com/imbypass/omarchy-theme-hook) |
-| 11 | Omarchy webapps | `bin/install-webapps.sh` — needs Chrome from phase 5 |
-| 12 | Nightlight automation | `nightlight/install-nightlight.sh` |
-| 13 | Default browser | `xdg-settings set default-web-browser google-chrome.desktop` |
-| 14 | Clone projects + vault | `bin/clone-projects.sh` — LAST because it needs the SSH key |
+| 5 | AUR packages (`packages/aur.txt`) | `google-chrome`, `lazysql` via `omarchy-pkg-aur-add` |
+| 6 | Dotfile symlinks | Hypr file-by-file, nvim whole-dir (backs up Omarchy default), venv presets |
+| 7 | Japanese input method | fcitx5 profile + config symlinks, then restarts running fcitx5 to pick up Mozc |
+| 8 | Tmux session scripts | `install -m 0755` from `bin/tmux-sessions/*.sh` into `~/.local/bin/`, stripping `.sh` |
+| 9 | Shell wiring | Sources `shell/mkvenv.sh` from `~/.bashrc` |
+| 10 | Omarchy themes | `bin/install-themes.sh` clones upstream themes and overlays custom backgrounds |
+| 11 | Theme hooks | `theme-hook-update` — installs [imbypass/omarchy-theme-hook](https://github.com/imbypass/omarchy-theme-hook) |
+| 12 | Omarchy webapps | `bin/install-webapps.sh` — needs Chrome from phase 5 |
+| 13 | Nightlight automation | `nightlight/install-nightlight.sh` |
+| 14 | Default browser | `xdg-settings set default-web-browser google-chrome.desktop` |
+| 15 | Clone projects + vault | `bin/clone-projects.sh` — LAST because it needs the SSH key |
 
 ### Dry-run
 

@@ -6,3 +6,4 @@
 
 # Apps
 google-chrome
+lazysql

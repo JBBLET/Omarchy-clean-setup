@@ -18,6 +18,12 @@ kotlin
 cmake
 git-lfs
 
+# Belt-and-braces: these ARE in omarchy-base.packages, but listing them here
+# too means install.sh rebuilds them on a stripped Omarchy install. --needed
+# makes this a no-op on a fresh base install.
+lazygit
+lazydocker
+
 # Japanese input — fcitx5 itself is in Omarchy base, but the Mozc engine
 # and the GUI config tool are not.
 fcitx5-mozc

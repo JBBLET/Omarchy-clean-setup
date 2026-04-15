@@ -169,12 +169,20 @@ for f in "$REPO_ROOT"/config/hypr/*.conf; do
 done
 ok "hypr configs linked"
 
-# Neovim: whole directory (we own it).
-if [[ -L "$HOME/.config/nvim" || ! -e "$HOME/.config/nvim" ]]; then
-  run ln -sfn "$REPO_ROOT/config/nvim" "$HOME/.config/nvim"
+# Neovim: whole directory (we own it). On a fresh Omarchy machine,
+# `omarchy-nvim-setup` has already copied Omarchy's stock LazyVim config to
+# ~/.config/nvim as a real directory — we back that up (timestamped) and
+# replace it with a symlink to our version. Already-a-symlink → just relink.
+NVIM_DIR="$HOME/.config/nvim"
+if [[ -L "$NVIM_DIR" || ! -e "$NVIM_DIR" ]]; then
+  run ln -sfn "$REPO_ROOT/config/nvim" "$NVIM_DIR"
   ok "nvim linked"
 else
-  warn "$HOME/.config/nvim exists and is not a symlink — skipping, back it up manually"
+  NVIM_BAK="$NVIM_DIR.bak.$(date +%Y%m%d-%H%M%S)"
+  warn "$NVIM_DIR is a real directory (Omarchy default?), backing up to $NVIM_BAK"
+  run mv "$NVIM_DIR" "$NVIM_BAK"
+  run ln -sfn "$REPO_ROOT/config/nvim" "$NVIM_DIR"
+  ok "nvim linked (previous config at $NVIM_BAK)"
 fi
 
 # Venv presets: symlink each requirements file under ~/.venvs/
@@ -202,7 +210,36 @@ for f in "$REPO_ROOT"/config/fcitx5/*; do
 done
 ok "fcitx5 profile linked (mozc set as default IM)"
 
-# ── 8. Shell wiring: source mkvenv from ~/.bashrc ─────────────────────────
+# fcitx5 was likely started by Omarchy's default Hyprland autostart before
+# install.sh ran — it doesn't know about the mozc addon (installed in phase 3)
+# or the new profile (symlinked just above). Restart it so the next keypress
+# picks up both. Swallow errors: fcitx5 might not be running at all (e.g. when
+# install.sh is re-run from a TTY), in which case `pkill` exits non-zero.
+if pgrep -x fcitx5 >/dev/null 2>&1; then
+  run bash -c 'pkill -x fcitx5 2>/dev/null; sleep 0.3; fcitx5 -d >/dev/null 2>&1 &'
+  ok "fcitx5 restarted to load mozc + new profile"
+else
+  ok "fcitx5 not running — it will start via hypr autostart on next session"
+fi
+
+# ── 8. Tmux session scripts ──────────────────────────────────────────────
+#
+# The scripts under bin/tmux-sessions/ are project-session launchers (one per
+# project). They get installed (copied, not symlinked, since we want them on
+# PATH without exposing the whole bin/ subdirectory) into ~/.local/bin/ with
+# the .sh extension stripped — so `tmux-finlib.sh` becomes `tmux-finlib` on
+# the PATH. `install -m 0755` is idempotent and handles the chmod in one shot.
+
+log "Installing tmux session scripts"
+run mkdir -p "$HOME/.local/bin"
+for f in "$REPO_ROOT"/bin/tmux-sessions/*.sh; do
+  [[ -f "$f" ]] || continue
+  dest="$HOME/.local/bin/$(basename "$f" .sh)"
+  run install -m 0755 "$f" "$dest"
+done
+ok "tmux session scripts installed to ~/.local/bin/"
+
+# ── 9. Shell wiring: source mkvenv from ~/.bashrc ─────────────────────────
 
 log "Wiring mkvenv into ~/.bashrc"
 BASHRC="$HOME/.bashrc"
@@ -220,12 +257,12 @@ else
   ok "mkvenv already sourced"
 fi
 
-# ── 9. Omarchy themes ─────────────────────────────────────────────────────
+# ── 10. Omarchy themes ────────────────────────────────────────────────────
 
 log "Installing Omarchy themes"
 run "$REPO_ROOT/bin/install-themes.sh"
 
-# ── 10. Omarchy theme hooks (imbypass/omarchy-theme-hook) ─────────────────
+# ── 11. Omarchy theme hooks (imbypass/omarchy-theme-hook) ─────────────────
 #
 # Installs the community theme-set / theme-set.d/ hook framework which
 # repaints alacritty, ghostty, kitty, gtk, waybar, walker, mako, swayosd,
@@ -243,17 +280,17 @@ else
   warn "theme-hook-update not found in PATH — skipping theme hooks"
 fi
 
-# ── 11. Omarchy webapps ───────────────────────────────────────────────────
+# ── 12. Omarchy webapps ───────────────────────────────────────────────────
 
 log "Installing Omarchy webapps"
 run "$REPO_ROOT/bin/install-webapps.sh"
 
-# ── 12. Nightlight automation ─────────────────────────────────────────────
+# ── 13. Nightlight automation ─────────────────────────────────────────────
 
 log "Installing nightlight automation"
 run "$REPO_ROOT/nightlight/install-nightlight.sh"
 
-# ── 13. Default browser: Google Chrome ────────────────────────────────────
+# ── 14. Default browser: Google Chrome ────────────────────────────────────
 
 log "Setting Google Chrome as default browser"
 if (( DRY_RUN )); then
@@ -265,7 +302,7 @@ else
   warn "google-chrome.desktop not found — skipping (did the AUR install fail?)"
 fi
 
-# ── 14. Clone personal projects + vault (LAST step — requires SSH key) ───
+# ── 15. Clone personal projects + vault (LAST step — requires SSH key) ───
 
 log "Cloning personal project repos and Obsidian vault"
 run "$REPO_ROOT/bin/clone-projects.sh"
