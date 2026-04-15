@@ -95,10 +95,25 @@ fi
 # ── 4. Verify SSH to GitHub ───────────────────────────────────────────────
 
 log "Verifying SSH to github.com"
-# github returns exit 1 on a successful "Hi <user>!" message, so we check output.
-if ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 | grep -q 'successfully authenticated'; then
+# github's ssh -T always exits 1 (no shell access), even on successful auth,
+# so we ignore the exit code and match on the output string. Captured into a
+# variable so `set -o pipefail` doesn't misinterpret ssh's exit 1 as a failure
+# of the pipeline. Retry a few times because a freshly-uploaded key can take
+# a second or two to propagate on GitHub's side.
+SSH_OK=0
+for attempt in 1 2 3 4 5; do
+  SSH_OUT="$(ssh -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 || true)"
+  if grep -q 'successfully authenticated' <<<"$SSH_OUT"; then
+    SSH_OK=1
+    break
+  fi
+  warn "ssh verify attempt $attempt failed, retrying in 2s..."
+  sleep 2
+done
+if (( SSH_OK )); then
   ok "ssh -T git@github.com works"
 else
+  printf '%s\n' "$SSH_OUT" >&2
   die "SSH to github.com failed — check 'ssh -vT git@github.com' manually"
 fi
 
