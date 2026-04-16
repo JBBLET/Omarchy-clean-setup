@@ -24,7 +24,10 @@ git-lfs
 # in the regular [extra] repo.
 lazygit
 lazydocker
-claude-code
+# claude-code — in omarchy-base.packages and the [omarchy] pacman repo, but
+# NOT listed here because the repo can lag behind and a stale version 404s,
+# blocking the entire pacman transaction. On a fresh Omarchy it's preinstalled;
+# if missing, install via: sudo pacman -S claude-code (or omarchy-update).
 spotify
 libreoffice-fresh
 obsidian
