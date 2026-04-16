@@ -313,10 +313,34 @@ run "$REPO_ROOT/bin/install-themes.sh"
 # Side effect: the wrapper re-applies the current theme at the end.
 
 log "Installing Omarchy theme hooks"
+THEME_HOOK_REPO="https://github.com/imbypass/omarchy-theme-hook"
+THEME_HOOK_DIR="$HOME/.local/share/omarchy-theme-hook"
+HOOKS_DIR="$HOME/.config/omarchy/hooks"
 if command -v theme-hook-update >/dev/null 2>&1; then
   run theme-hook-update
 else
-  warn "theme-hook-update not found in PATH — skipping theme hooks"
+  # theme-hook-update not shipped in this Omarchy version — clone and install manually.
+  # Repo layout: theme-set (main hook), theme-set.d/ (per-app scripts), thctl (control tool).
+  if (( DRY_RUN )); then
+    dry "git clone $THEME_HOOK_REPO $THEME_HOOK_DIR (or git pull if already present)"
+    dry "install $THEME_HOOK_DIR/theme-set -> $HOOKS_DIR/theme-set"
+    dry "install $THEME_HOOK_DIR/theme-set.d/* -> $HOOKS_DIR/theme-set.d/"
+    dry "install $THEME_HOOK_DIR/thctl -> ~/.local/share/omarchy/bin/thctl"
+  else
+    if [[ -d "$THEME_HOOK_DIR/.git" ]]; then
+      git -C "$THEME_HOOK_DIR" pull --ff-only
+    else
+      git clone "$THEME_HOOK_REPO" "$THEME_HOOK_DIR"
+    fi
+    mkdir -p "$HOOKS_DIR" "$HOOKS_DIR/theme-set.d"
+    install -m 0755 "$THEME_HOOK_DIR/theme-set" "$HOOKS_DIR/theme-set"
+    for script in "$THEME_HOOK_DIR"/theme-set.d/*; do
+      [[ -f "$script" ]] || continue
+      install -m 0755 "$script" "$HOOKS_DIR/theme-set.d/$(basename "$script")"
+    done
+    install -m 0755 "$THEME_HOOK_DIR/thctl" "$HOME/.local/share/omarchy/bin/thctl"
+    ok "theme hooks installed from $THEME_HOOK_REPO"
+  fi
 fi
 
 # ── 13. Omarchy webapps ───────────────────────────────────────────────────
