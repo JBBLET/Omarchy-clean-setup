@@ -278,22 +278,22 @@ for f in "$REPO_ROOT"/bin/tmux-sessions/*.sh; do
 done
 ok "tmux session scripts installed to ~/.local/bin/"
 
-# ── 10. Shell wiring: source mkvenv from ~/.bashrc ───────────────────────
+# ── 10. Shell wiring: source uvinit from ~/.bashrc ───────────────────────
 
-log "Wiring mkvenv into ~/.bashrc"
+log "Wiring uvinit into ~/.bashrc"
 BASHRC="$HOME/.bashrc"
-if ! grep -Fqs "$REPO_ROOT/shell/mkvenv.sh" "$BASHRC" 2>/dev/null; then
+if ! grep -Fqs "$REPO_ROOT/shell/uvinit.sh" "$BASHRC" 2>/dev/null; then
   if (( DRY_RUN )); then
-    dry "append 'source \"$REPO_ROOT/shell/mkvenv.sh\"' to $BASHRC"
+    dry "append 'source \"$REPO_ROOT/shell/uvinit.sh\"' to $BASHRC"
   else
     {
-      printf '\n# Omarchy-clean-setup: mkvenv helper\n'
-      printf 'source "%s/shell/mkvenv.sh"\n' "$REPO_ROOT"
+      printf '\n# Omarchy-clean-setup: uvinit helper\n'
+      printf 'source "%s/shell/uvinit.sh"\n' "$REPO_ROOT"
     } >> "$BASHRC"
-    ok "added mkvenv source line"
+    ok "added uvinit source line"
   fi
 else
-  ok "mkvenv already sourced"
+  ok "uvinit already sourced"
 fi
 
 # ── 11. Omarchy themes ────────────────────────────────────────────────────
